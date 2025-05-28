@@ -8,9 +8,12 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final TextEditingController zipController = TextEditingController();
+  Future<String>? cityFut;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
@@ -18,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
             spacing: 32,
             children: [
               TextFormField(
+                controller: zipController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: "Postleitzahl",
@@ -26,13 +30,32 @@ class _MainScreenState extends State<MainScreen> {
               OutlinedButton(
                 onPressed: () {
                   // TODO: implementiere Suche
+                  setState(() {
+                    cityFut = getCityFromZip(zipController.text.trim());
+                  });
                 },
                 child: const Text("Suche"),
               ),
-              Text(
-                "Ergebnis: Noch keine PLZ gesucht",
-                style: Theme.of(context).textTheme.labelLarge,
+              FutureBuilder<String>(
+                future: cityFut,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text("Fehler bei der Suche!");
+                  } else if (snapshot.hasData) {
+                    return Text(
+                      "Ergebnis: ${snapshot.data}",
+                    );
+                  } else {
+                    return Text("Keine PLZ gesucht");
+                  }
+                },
               ),
+              // Text(
+              //   "Ergebnis: Noch keine PLZ gesucht",
+              //   style: Theme.of(context).textTheme.labelLarge,
+              // ),
             ],
           ),
         ),
@@ -43,6 +66,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void dispose() {
     // TODO: dispose controllers
+    zipController.dispose();
     super.dispose();
   }
 
